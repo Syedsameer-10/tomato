@@ -1,0 +1,101 @@
+/* Restaurant grid */
+.restaurant-grid {
+  display: flex;
+  flex-direction :column; /* one restaurant after another */
+  gap: 30px;
+}
+
+.restaurant-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.restaurant-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.restaurant-img {
+  width: 100px; /* make it uniform */
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.restaurant-name {
+  font-size: 24px;
+  font-weight: bold;
+}
+/* ⚡ Food grid: 6 per row, all cards same height */
+.restaurant-food-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 6 items per row */
+  gap: 16px;
+  align-items: stretch; /* make all grid items same height */
+}
+
+.food-card {
+  width: 100%;               /* full width of grid cell */
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;              /* stretch to fill grid cell */
+}
+
+/* Food image */
+.food-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+/* Food name & description */
+.food-name {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.food-desc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* Bottom row: price + add button */
+.food-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.food-price {
+  font-weight: bold;
+  color: #333;
+}
+
+.add-btn {
+  background-color: #ff4d4d;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: white;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.add-btn img.add-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+}
