@@ -4,7 +4,7 @@ import Navbar from './Components/Navbar/Navbar';
 import Home from './pages/Home/Home';
 import Cart from './pages/Cart/Cart';
 import Placeorder from './pages/PlaceOrder/Placeorder';
-import Footer from './Components/footer/footer';
+import Footer from './Components/Footer/Footer';
 import LoginPopup from './Components/LoginPopup/LoginPopup';
 import StoreContextProvider from './Context/storecontext'; // 🔥
 
