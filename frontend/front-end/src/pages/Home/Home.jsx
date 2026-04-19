@@ -25,7 +25,7 @@ const Home = () => {
       }
       try {
         const response = await fetch(
-          `http://localhost:5000/api/search?q=${encodeURIComponent(searchTerm)}`
+          `/api/search?q=${encodeURIComponent(searchTerm)}`
         );
         const data = await response.json();
         setSearchResults(data);
@@ -50,7 +50,7 @@ const Home = () => {
       }
 
       try {
-        const url = `http://localhost:5000/api/filter?filter=${encodeURIComponent(
+        const url = `/api/filter?filter=${encodeURIComponent(
           activeFilter
         )}&veg=${encodeURIComponent(vegFilter)}`;
         const res = await fetch(url);

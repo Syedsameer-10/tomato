@@ -25,7 +25,7 @@ const LoginPopup = ({ setShowLogin }) => {
     const endpoint = currState === "Sign Up" ? "/api/signup" : "/api/login";
 
     try {
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

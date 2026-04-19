@@ -1,0 +1,79 @@
+You are refactoring my full-stack project to replace the existing PostgreSQL (psql/local database) with Supabase.
+
+IMPORTANT CONTEXT:
+
+* I already have a file called `dump.sql` which contains my full database schema and data.
+* Use this file as the source of truth for all tables, columns, and relationships.
+* Do NOT invent or redesign the schema.
+
+TASKS:
+
+1. ANALYZE dump.sql
+
+* Extract all tables, columns, relationships, and constraints.
+* Identify all table names used in the project.
+
+2. REMOVE OLD DATABASE LOGIC
+
+* Remove all usage of pg, Pool, Client, or direct PostgreSQL connections.
+* Delete or refactor database config files related to local DB.
+
+3. SETUP SUPABASE CLIENT
+
+* Install @supabase/supabase-js
+* Create a reusable client file (e.g., /lib/supabaseClient.js)
+
+4. ENV VARIABLES
+   Use:
+
+* NEXT_PUBLIC_SUPABASE_URL
+* NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+Do NOT hardcode credentials.
+
+5. REPLACE DATABASE OPERATIONS
+   For each existing query in the codebase:
+
+* Convert SQL queries into Supabase queries using correct table names from dump.sql
+
+Mapping:
+
+* SELECT → supabase.from('table').select()
+* INSERT → supabase.from('table').insert()
+* UPDATE → supabase.from('table').update()
+* DELETE → supabase.from('table').delete()
+
+6. MATCH EXISTING LOGIC
+
+* Preserve all current functionality (CRUD, filters, joins if possible)
+* If joins exist, use Supabase relational queries or multiple queries
+
+7. HANDLE DATA TYPES
+
+* Ensure correct handling of timestamps, UUIDs, foreign keys based on dump.sql
+
+8. ERROR HANDLING
+
+* Use async/await
+* Handle { data, error } properly
+
+9. OUTPUT
+
+* Show all modified files
+* Highlight where Supabase replaced old DB logic
+* Mention any places where manual setup in Supabase is required
+
+10. FINAL CHECK
+
+* Ensure no pg or local database references remain
+* Ensure app is ready for Vercel deployment
+
+DO NOT:
+
+* Change UI
+* Change business logic
+* Invent new database structure
+
+ONLY:
+
+* Replace database layer using Supabase based on dump.sql

@@ -28,7 +28,7 @@ const Navbar = ({ setShowLogin }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/search?q=${value}`);
+      const response = await fetch(`/api/search?q=${value}`);
       const data = await response.json();
       setSearchResults(data);
       setShowResults(true);

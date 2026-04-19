@@ -11,11 +11,7 @@ app.use(express.json());
 
 // ✅ PostgreSQL Connection
 const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "food",
-  password: "sameer2006",
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
 });
 
 pool.connect()
@@ -278,5 +274,5 @@ app.post("/api/login", async (req, res) => {
 // START SERVER
 // ============================================================
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+const PORT = process.env.BACKEND_PORT || 3001;
+app.listen(PORT, "localhost", () => console.log(`🚀 Server running at http://localhost:${PORT}`));

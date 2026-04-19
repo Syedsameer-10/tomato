@@ -10,7 +10,7 @@ const RestaurantDisplay = () => {
   const { setMenuItems } = useContext(StoreContext);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/restaurants")
+    fetch("/api/restaurants")
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setRestaurants(data.restaurants);
@@ -21,7 +21,7 @@ const RestaurantDisplay = () => {
   useEffect(() => {
     let allItems = [];
     restaurants.forEach((rest) => {
-      fetch(`http://localhost:5000/api/menu/${rest.restaurant_id}`)
+      fetch(`/api/menu/${rest.restaurant_id}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
