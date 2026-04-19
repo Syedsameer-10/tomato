@@ -302,4 +302,4 @@ app.post("/api/login", async (req, res) => {
 // ============================================================
 
 const PORT = process.env.BACKEND_PORT || 3001;
-app.listen(PORT, "localhost", () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running at http://localhost:${PORT}`));
