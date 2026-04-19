@@ -1,35 +1,27 @@
 import express from "express";
 import cors from "cors";
-import pkg from "pg";
 import bcrypt from "bcrypt";
-
-const { Pool } = pkg;
+import supabase from "./supabaseClient.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// ✅ PostgreSQL Connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-pool.connect()
-  .then(() => console.log("✅ Connected to PostgreSQL"))
-  .catch((err) => console.error("❌ DB connection error:", err));
 
 // ============================================================
 // 🧩 RESTAURANTS
 // ============================================================
 
 app.get("/api/restaurants", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM restaurants ORDER BY restaurant_id ASC");
-    res.json({ success: true, restaurants: result.rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Database error" });
+  const { data, error } = await supabase
+    .from("restaurants")
+    .select("*")
+    .order("restaurant_id", { ascending: true });
+
+  if (error) {
+    console.error("❌ restaurants error:", error);
+    return res.status(500).json({ success: false, message: "Database error" });
   }
+  res.json({ success: true, restaurants: data });
 });
 
 // ============================================================
@@ -38,16 +30,18 @@ app.get("/api/restaurants", async (req, res) => {
 
 app.get("/api/menu/:restaurant_id", async (req, res) => {
   const { restaurant_id } = req.params;
-  try {
-    const result = await pool.query(
-      "SELECT * FROM menu_items WHERE restaurant_id = $1 ORDER BY item_id ASC",
-      [restaurant_id]
-    );
-    res.json({ success: true, menu: result.rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Database error" });
+
+  const { data, error } = await supabase
+    .from("menu_items")
+    .select("*")
+    .eq("restaurant_id", restaurant_id)
+    .order("item_id", { ascending: true });
+
+  if (error) {
+    console.error("❌ menu error:", error);
+    return res.status(500).json({ success: false, message: "Database error" });
   }
+  res.json({ success: true, menu: data });
 });
 
 // ============================================================
@@ -55,84 +49,78 @@ app.get("/api/menu/:restaurant_id", async (req, res) => {
 // ============================================================
 
 app.get("/api/filter", async (req, res) => {
-  const { filter = "All", veg = "Veg" } = req.query; // e.g., ?filter=High Protein&veg=Veg
+  const { filter = "All", veg = "Veg" } = req.query;
   console.log(`🎯 Received filter: ${filter}, Veg/Non-Veg: ${veg}`);
 
   try {
-    let query = `
-      SELECT m.*, r.name AS restaurant_name, r.location
-      FROM menu_items m
-      JOIN restaurants r ON m.restaurant_id = r.restaurant_id
-      WHERE m.available = true
-    `;
+    let query = supabase
+      .from("menu_items")
+      .select("*, restaurants(name, location)")
+      .eq("available", true);
 
-    // 🥗 Veg / Non-Veg filter handling
-    if (veg) {
-      if (veg === "Veg") {
-        query += " AND LOWER(m.veg_nonveg) = 'veg'";
-      } else if (veg === "Non-Veg") {
-        query += " AND LOWER(m.veg_nonveg) = 'nonveg'";
-      }
+    // 🥗 Veg / Non-Veg filter
+    if (veg === "Veg") {
+      query = query.ilike("veg_nonveg", "veg");
+    } else if (veg === "Non-Veg") {
+      query = query.ilike("veg_nonveg", "non-veg");
     }
 
     // 🎛 Apply selected filter
     switch (filter) {
       case "Offers":
-        query += " AND m.price <= 200 ORDER BY m.price ASC";
+        query = query.lte("price", 200).order("price", { ascending: true });
         break;
 
       case "Rating 4.5+":
-        query += " AND m.rating >= 4.5 ORDER BY m.rating DESC";
+        query = query.gte("rating", 4.5).order("rating", { ascending: false });
         break;
 
       case "High Protein":
-        query += `
-          AND (
-            LOWER(m.item_name) LIKE '%chicken%' OR
-            LOWER(m.item_name) LIKE '%egg%' OR
-            LOWER(m.item_name) LIKE '%paneer%' OR
-            LOWER(m.description) LIKE '%protein%'
+        query = query
+          .or(
+            "item_name.ilike.%chicken%,item_name.ilike.%egg%,item_name.ilike.%paneer%,description.ilike.%protein%"
           )
-          ORDER BY m.rating DESC
-        `;
+          .order("rating", { ascending: false });
         break;
 
       case "Low Budget":
-        query += " AND m.price <= 100 ORDER BY m.price ASC";
+        query = query.lte("price", 100).order("price", { ascending: true });
         break;
 
       case "Student Combo":
-        query += `
-          AND (
-            LOWER(m.item_name) LIKE '%combo%' OR
-            LOWER(m.item_name) LIKE '%meal%' OR
-            m.price BETWEEN 50 AND 150
-          )
-          ORDER BY m.price ASC
-        `;
+        query = query
+          .or("item_name.ilike.%combo%,item_name.ilike.%meal%")
+          .order("price", { ascending: true });
         break;
 
       default:
-        query += " ORDER BY m.rating DESC";
+        query = query.order("rating", { ascending: false });
         break;
     }
 
-    const result = await pool.query(query);
-    console.log(`✅ Returning ${result.rows.length} items for filter: ${filter} (${veg})`);
-    res.json({ success: true, items: result.rows });
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("❌ Filter error:", error);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    const items = data.map((item) => ({
+      ...item,
+      restaurant_name: item.restaurants?.name,
+      location: item.restaurants?.location,
+    }));
+
+    console.log(`✅ Returning ${items.length} items for filter: ${filter} (${veg})`);
+    res.json({ success: true, items });
   } catch (err) {
     console.error("❌ Filter error:", err);
-    res.status(500).json({ success: false, message: "Database error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-
 // ============================================================
 // 🔍 SEARCH API
-// ============================================================
-
-// ============================================================
-// 🔍 SEARCH API (Fixed — includes restaurant_id for addToCart)
 // ============================================================
 
 app.get("/api/search", async (req, res) => {
@@ -143,42 +131,49 @@ app.get("/api/search", async (req, res) => {
   }
 
   try {
-    const searchTerm = `%${q.toLowerCase()}%`;
+    const searchTerm = q.toLowerCase();
 
-    const result = await pool.query(
-      `
-      SELECT 
-        m.item_id,
-        m.item_name,
-        m.price,
-        m.description,
-        m.image,
-        m.veg_nonveg,
-        m.rating,
-        m.restaurant_id,      -- ✅ Added for cart linking
-        r.name AS restaurant_name,
-        r.location
-      FROM menu_items m
-      JOIN restaurants r ON m.restaurant_id = r.restaurant_id
-      WHERE LOWER(m.item_name) LIKE $1
-         OR LOWER(r.name) LIKE $1
-         OR LOWER(m.description) LIKE $1
-      ORDER BY r.name;
-      `,
-      [searchTerm]
-    );
+    const { data: menuData, error: menuError } = await supabase
+      .from("menu_items")
+      .select("item_id, item_name, price, description, image, veg_nonveg, rating, restaurant_id, restaurants(name, location)")
+      .or(
+        `item_name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`
+      );
 
-    if (result.rows.length === 0) {
-      return res.json([]); // ✅ Return empty array (frontend shows “No items found”)
+    if (menuError) {
+      console.error("❌ Search menu error:", menuError);
+      return res.status(500).json({ message: "Server error" });
     }
 
-    res.json(result.rows);
+    const { data: restData, error: restError } = await supabase
+      .from("menu_items")
+      .select("item_id, item_name, price, description, image, veg_nonveg, rating, restaurant_id, restaurants!inner(name, location)")
+      .ilike("restaurants.name", `%${searchTerm}%`);
+
+    if (restError) {
+      console.error("❌ Search restaurant error:", restError);
+    }
+
+    const combined = [...(menuData || []), ...(restData || [])];
+    const seen = new Set();
+    const results = combined
+      .filter((item) => {
+        if (seen.has(item.item_id)) return false;
+        seen.add(item.item_id);
+        return true;
+      })
+      .map((item) => ({
+        ...item,
+        restaurant_name: item.restaurants?.name,
+        location: item.restaurants?.location,
+      }));
+
+    res.json(results);
   } catch (err) {
     console.error("❌ Error searching items:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // ============================================================
 // 🧩 PLACE ORDER
@@ -193,27 +188,45 @@ app.post("/api/placeorder", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid order data" });
     }
 
-    const orderResult = await pool.query(
-      `INSERT INTO orders (user_id, order_time, status, total_amount, delivery_address)
-       VALUES ($1, NOW(), 'Pending', $2, $3) RETURNING order_id`,
-      [user_id, total_amount, delivery_address]
-    );
+    const { data: orderData, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        user_id,
+        status: "Pending",
+        total_amount,
+        delivery_address,
+        order_time: new Date().toISOString(),
+      })
+      .select("order_id")
+      .single();
 
-    const orderId = orderResult.rows[0].order_id;
+    if (orderError) {
+      console.error("❌ Order insert error:", orderError);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
 
-    const insertPromises = cartItems.map((item) =>
-      pool.query(
-        `INSERT INTO order_details (order_id, item_id, quantity, price)
-         VALUES ($1, $2, $3, $4)`,
-        [orderId, item.item_id, item.quantity, item.price]
-      )
-    );
-    await Promise.all(insertPromises);
+    const orderId = orderData.order_id;
+
+    const orderDetails = cartItems.map((item) => ({
+      order_id: orderId,
+      item_id: item.item_id,
+      quantity: item.quantity,
+      price: item.price,
+    }));
+
+    const { error: detailsError } = await supabase
+      .from("order_details")
+      .insert(orderDetails);
+
+    if (detailsError) {
+      console.error("❌ Order details insert error:", detailsError);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
 
     res.json({ success: true, message: "Order placed successfully", orderId });
   } catch (err) {
     console.error("❌ Error placing order:", err);
-    res.status(500).json({ success: false, message: "Database error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
@@ -228,22 +241,32 @@ app.post("/api/signup", async (req, res) => {
     return res.status(400).json({ success: false, message: "All fields required" });
 
   try {
-    const check = await pool.query("SELECT * FROM customers WHERE email = $1", [email]);
-    if (check.rows.length > 0)
+    const { data: existing } = await supabase
+      .from("customers")
+      .select("customer_id")
+      .eq("email", email)
+      .single();
+
+    if (existing)
       return res.json({ success: false, message: "Email already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const result = await pool.query(
-      `INSERT INTO customers (name, email, password)
-       VALUES ($1, $2, $3) RETURNING customer_id, name, email`,
-      [name, email, hashedPassword]
-    );
+    const { data, error } = await supabase
+      .from("customers")
+      .insert({ name, email, password: hashedPassword })
+      .select("customer_id, name, email")
+      .single();
 
-    res.json({ success: true, customer: result.rows[0] });
+    if (error) {
+      console.error("Signup error:", error);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    res.json({ success: true, customer: data });
   } catch (err) {
     console.error("Signup error:", err);
-    res.status(500).json({ success: false, message: "Database error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
@@ -254,11 +277,15 @@ app.post("/api/login", async (req, res) => {
     return res.status(400).json({ success: false, message: "All fields required" });
 
   try {
-    const result = await pool.query("SELECT * FROM customers WHERE email = $1", [email]);
-    if (result.rows.length === 0)
+    const { data: user, error } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("email", email)
+      .single();
+
+    if (error || !user)
       return res.status(401).json({ success: false, message: "Invalid email" });
 
-    const user = result.rows[0];
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res.status(401).json({ success: false, message: "Invalid password" });
