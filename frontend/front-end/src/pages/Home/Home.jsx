@@ -12,7 +12,7 @@ const Home = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
-  const [vegFilter, setVegFilter] = useState("Veg");
+  const [vegFilter, setVegFilter] = useState("All");
   const [filteredItems, setFilteredItems] = useState([]);
   const { addToCart, removeFromCart, cartItems } = useContext(StoreContext);
 
@@ -43,7 +43,7 @@ const Home = () => {
     const fetchFilteredItems = async () => {
       if (
         (activeFilter === "All" || activeFilter === "Filters") &&
-        vegFilter === "Veg"
+        vegFilter === "All"
       ) {
         setFilteredItems([]);
         return;

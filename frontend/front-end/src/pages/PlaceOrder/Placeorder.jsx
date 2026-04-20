@@ -4,7 +4,7 @@ import { StoreContext } from "../../Context/storecontext";
 import { useNavigate } from "react-router-dom";
 
 const Placeorder = () => {
-  const { cartItems, menuItems, getTotalCartAmount, clearCart, user } = useContext(StoreContext);
+  const { cartItems, menuItems, getTotalCartAmount, getDiscount, appliedCoupon, clearCart, user } = useContext(StoreContext);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -38,13 +38,15 @@ const Placeorder = () => {
     for (let f of required) if (!formData[f].trim()) return alert(`❌ Fill ${f}`);
 
     const deliveryAddress = `${formData.street}, ${formData.city}, ${formData.state}, ${formData.country} - ${formData.zip}`;
-    const total = getTotalCartAmount() + 30;
+    const subtotal = getTotalCartAmount();
+    const discount = getDiscount();
+    const total = subtotal + 30 - discount;
 
-    const orderData = { 
-      user_id: user.customer_id, // 🔥 Logged-in user id
-      total_amount: total, 
-      delivery_address: deliveryAddress, 
-      cartItems: cartItemsArray 
+    const orderData = {
+      user_id: user.customer_id,
+      total_amount: total,
+      delivery_address: deliveryAddress,
+      cartItems: cartItemsArray
     };
 
     try {
@@ -68,7 +70,9 @@ const Placeorder = () => {
     }
   };
 
-  const total = getTotalCartAmount();
+  const subtotal = getTotalCartAmount();
+  const discount = getDiscount();
+  const total = subtotal + 30 - discount;
 
   return (
     <form className="place-order" onSubmit={handlePlaceOrder}>
@@ -94,9 +98,16 @@ const Placeorder = () => {
       <div className="place-order-right">
         <div className="cart-total">
           <h2>Cart Totals</h2>
-          <div className="cart-total-details"><p>Subtotal</p><p>₹{total}</p></div>
+          <div className="cart-total-details"><p>Subtotal</p><p>₹{subtotal}</p></div>
           <div className="cart-total-details"><p>Delivery Fee</p><p>₹30</p></div>
-          <div className="cart-total-details"><b>Total</b><b>₹{total+30}</b></div>
+          {discount > 0 && (
+            <div className="cart-total-details" style={{color: "#2e7d32"}}>
+              <p>Coupon ({appliedCoupon?.label})</p>
+              <p>− ₹{discount}</p>
+            </div>
+          )}
+          <hr />
+          <div className="cart-total-details"><b>Total</b><b>₹{total}</b></div>
           <button type="submit">PROCEED TO PAYMENT</button>
         </div>
       </div>

@@ -1,23 +1,34 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import './Cart.css';
 import { StoreContext } from '../../Context/storecontext';
 import { useNavigate } from 'react-router-dom';
 
 const Cart = ({ setShowLogin }) => {
-  const { cartItems, menuItems, removeFromCart, getTotalCartAmount, user } = useContext(StoreContext);
+  const {
+    cartItems, menuItems, removeFromCart, getTotalCartAmount, user,
+    applyCoupon, removeCoupon, appliedCoupon, couponError, getDiscount,
+  } = useContext(StoreContext);
   const navigate = useNavigate();
+  const [couponInput, setCouponInput] = useState("");
 
   const itemsInCart = menuItems.filter(item => cartItems[item.item_id] > 0);
-  const total = getTotalCartAmount();
-  const deliveryFee = total > 0 ? 30 : 0;
+  const subtotal = getTotalCartAmount();
+  const deliveryFee = subtotal > 0 ? 30 : 0;
+  const discount = getDiscount();
+  const total = subtotal + deliveryFee - discount;
 
   const handleCheckout = () => {
     if (!user) {
       alert("❌ Please log in first to place an order!");
-      setShowLogin(true); // open login popup
+      setShowLogin(true);
       return;
     }
     navigate('/order');
+  };
+
+  const handleApplyCoupon = () => {
+    if (!couponInput.trim()) return;
+    applyCoupon(couponInput);
   };
 
   return (
@@ -52,17 +63,54 @@ const Cart = ({ setShowLogin }) => {
         <div className='cart-total'>
           <h2>Cart Totals</h2>
           <div className='cart-total-details'>
-            <p>Subtotal</p><p>₹{total}</p>
+            <p>Subtotal</p><p>₹{subtotal}</p>
           </div>
           <div className='cart-total-details'>
             <p>Delivery Fee</p><p>₹{deliveryFee}</p>
           </div>
+          {discount > 0 && (
+            <div className='cart-total-details coupon-discount'>
+              <p>Coupon Discount ({appliedCoupon.label})</p>
+              <p>− ₹{discount}</p>
+            </div>
+          )}
+          <hr />
           <div className='cart-total-details'>
-            <b>Total</b><b>₹{total + deliveryFee}</b>
+            <b>Total</b><b>₹{total}</b>
           </div>
           <button type="button" onClick={handleCheckout}>
             PROCEED TO CHECKOUT
           </button>
+        </div>
+
+        <div className='cart-promocode'>
+          <p>Have a promo code? Enter it here</p>
+          <div className='coupon-row'>
+            <input
+              type="text"
+              placeholder="Enter coupon code"
+              value={couponInput}
+              onChange={e => setCouponInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
+              disabled={!!appliedCoupon}
+            />
+            {appliedCoupon ? (
+              <button className='coupon-remove-btn' onClick={() => { removeCoupon(); setCouponInput(""); }}>
+                Remove
+              </button>
+            ) : (
+              <button className='coupon-apply-btn' onClick={handleApplyCoupon}>
+                Apply
+              </button>
+            )}
+          </div>
+          {appliedCoupon && (
+            <p className='coupon-success'>✅ Coupon "{appliedCoupon.code}" applied — {appliedCoupon.label}!</p>
+          )}
+          {couponError && (
+            <p className='coupon-error'>❌ {couponError}</p>
+          )}
+          <p className='coupon-hint'>Try: TOMATO10, FLAT50, WELCOME20</p>
         </div>
       </div>
     </div>

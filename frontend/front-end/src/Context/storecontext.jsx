@@ -2,13 +2,19 @@ import { createContext, useState } from "react";
 
 export const StoreContext = createContext(null);
 
+const COUPONS = {
+  TOMATO10: { type: "percent", value: 10, label: "10% off" },
+  FLAT50:   { type: "flat",    value: 50, label: "₹50 off" },
+  WELCOME20: { type: "percent", value: 20, label: "20% off" },
+};
+
 const StoreContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   const [menuItems, setMenuItems] = useState([]);
   const [activeRestaurant, setActiveRestaurant] = useState(null);
-  const [user, setUser] = useState(null); // 🔥 Logged-in user
-
-  // Add to cart, removeFromCart, clearCart, getTotalCartAmount as before
+  const [user, setUser] = useState(null);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
 
   const addToCart = (item) => {
     const { item_id, restaurant_id } = item;
@@ -42,6 +48,8 @@ const StoreContextProvider = ({ children }) => {
   const clearCart = () => {
     setCartItems({});
     setActiveRestaurant(null);
+    setAppliedCoupon(null);
+    setCouponError("");
   };
 
   const getTotalCartAmount = () => {
@@ -56,6 +64,32 @@ const StoreContextProvider = ({ children }) => {
     return total;
   };
 
+  const getDiscount = () => {
+    if (!appliedCoupon) return 0;
+    const subtotal = getTotalCartAmount();
+    if (appliedCoupon.type === "percent") {
+      return Math.round((subtotal * appliedCoupon.value) / 100);
+    }
+    return Math.min(appliedCoupon.value, subtotal);
+  };
+
+  const applyCoupon = (code) => {
+    const coupon = COUPONS[code.trim().toUpperCase()];
+    if (!coupon) {
+      setCouponError("Invalid coupon code.");
+      setAppliedCoupon(null);
+      return false;
+    }
+    setAppliedCoupon({ code: code.trim().toUpperCase(), ...coupon });
+    setCouponError("");
+    return true;
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError("");
+  };
+
   return (
     <StoreContext.Provider value={{
       cartItems,
@@ -63,11 +97,16 @@ const StoreContextProvider = ({ children }) => {
       removeFromCart,
       clearCart,
       getTotalCartAmount,
+      getDiscount,
+      applyCoupon,
+      removeCoupon,
+      appliedCoupon,
+      couponError,
       menuItems,
       setMenuItems,
       activeRestaurant,
-      user,       // 🔥 Add user
-      setUser,    // 🔥 Add setUser
+      user,
+      setUser,
     }}>
       {children}
     </StoreContext.Provider>

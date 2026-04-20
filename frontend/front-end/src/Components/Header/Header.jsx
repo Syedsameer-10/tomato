@@ -3,13 +3,13 @@ import "./Header.css";
 import Carousel from "../Carousel/Carousel";
 
 const Header = ({ onFilterSelect, onVegToggle }) => {
-  const [isVeg, setIsVeg] = useState(true);
+  const [isVeg, setIsVeg] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
 
   const toggleCategory = () => {
     const newIsVeg = !isVeg;
     setIsVeg(newIsVeg);
-    onVegToggle(newIsVeg ? "Veg" : "Non-Veg"); // send change to parent
+    onVegToggle(newIsVeg ? "Veg" : "All");
   };
 
   const filters = [
@@ -47,12 +47,12 @@ const Header = ({ onFilterSelect, onVegToggle }) => {
           </div>
 
           <div className="category-toggle">
-            <span className={!isVeg ? "inactive" : "active"}>Veg</span>
+            <span className={isVeg ? "inactive" : "active"}>Normal</span>
             <label className="switch">
-              <input type="checkbox" checked={!isVeg} onChange={toggleCategory} />
+              <input type="checkbox" checked={isVeg} onChange={toggleCategory} />
               <span className="slider"></span>
             </label>
-            <span className={isVeg ? "inactive" : "active"}>Non-Veg</span>
+            <span className={!isVeg ? "inactive" : "active"}>Veg</span>
           </div>
         </div>
 
