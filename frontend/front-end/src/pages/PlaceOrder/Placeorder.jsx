@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../Context/storecontext";
 import { useNavigate } from "react-router-dom";
@@ -6,11 +6,26 @@ import { useNavigate } from "react-router-dom";
 const Placeorder = () => {
   const { cartItems, menuItems, getTotalCartAmount, getDiscount, appliedCoupon, clearCart, user } = useContext(StoreContext);
   const navigate = useNavigate();
+  const [deliveryFee, setDeliveryFee] = useState(30);
 
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: "", street: "",
     city: "", state: "", zip: "", country: "", phone: "",
   });
+
+  const subtotal = getTotalCartAmount();
+  const discount = getDiscount();
+
+  // Fetch delivery fee from DB function whenever subtotal changes
+  useEffect(() => {
+    if (subtotal === 0) { setDeliveryFee(0); return; }
+    fetch(`/api/delivery-fee?subtotal=${subtotal}`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setDeliveryFee(d.delivery_fee); })
+      .catch(() => setDeliveryFee(subtotal >= 500 ? 0 : 30));
+  }, [subtotal]);
+
+  const total = subtotal + deliveryFee - discount;
 
   const handleChange = e =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -38,15 +53,14 @@ const Placeorder = () => {
     for (let f of required) if (!formData[f].trim()) return alert(`❌ Fill ${f}`);
 
     const deliveryAddress = `${formData.street}, ${formData.city}, ${formData.state}, ${formData.country} - ${formData.zip}`;
-    const subtotal = getTotalCartAmount();
-    const discount = getDiscount();
-    const total = subtotal + 30 - discount;
 
+    // Send subtotal + discount; backend calls calculate_delivery_fee DB function
     const orderData = {
       user_id: user.customer_id,
-      total_amount: total,
+      subtotal,
+      discount,
       delivery_address: deliveryAddress,
-      cartItems: cartItemsArray
+      cartItems: cartItemsArray,
     };
 
     try {
@@ -58,7 +72,7 @@ const Placeorder = () => {
 
       const data = await res.json();
       if (data.success) {
-        alert("✅ Order placed successfully!");
+        alert(`✅ Order placed! Total: ₹${data.total_amount}`);
         clearCart();
         navigate("/");
       } else {
@@ -69,10 +83,6 @@ const Placeorder = () => {
       alert("❌ Server error while placing order");
     }
   };
-
-  const subtotal = getTotalCartAmount();
-  const discount = getDiscount();
-  const total = subtotal + 30 - discount;
 
   return (
     <form className="place-order" onSubmit={handlePlaceOrder}>
@@ -99,7 +109,10 @@ const Placeorder = () => {
         <div className="cart-total">
           <h2>Cart Totals</h2>
           <div className="cart-total-details"><p>Subtotal</p><p>₹{subtotal}</p></div>
-          <div className="cart-total-details"><p>Delivery Fee</p><p>₹30</p></div>
+          <div className="cart-total-details">
+            <p>Delivery Fee</p>
+            <p>{deliveryFee === 0 && subtotal > 0 ? <span style={{color:'#2e7d32'}}>FREE 🎉</span> : `₹${deliveryFee}`}</p>
+          </div>
           {discount > 0 && (
             <div className="cart-total-details" style={{color: "#2e7d32"}}>
               <p>Coupon ({appliedCoupon?.label})</p>
@@ -108,6 +121,9 @@ const Placeorder = () => {
           )}
           <hr />
           <div className="cart-total-details"><b>Total</b><b>₹{total}</b></div>
+          {subtotal >= 500 && (
+            <p style={{fontSize:'12px', color:'#2e7d32', marginTop:'-10px'}}>🎉 Free delivery applied!</p>
+          )}
           <button type="submit">PROCEED TO PAYMENT</button>
         </div>
       </div>

@@ -101,9 +101,7 @@ $$;
 
 ALTER FUNCTION public.fn_store_order_history() OWNER TO postgres;
 
---
--- Name: log_activity(integer, text, text); Type: FUNCTION; Schema: public; Owner: postgres
---
+
 
 CREATE FUNCTION public.log_activity(p_user_id integer, p_action text, p_details text DEFAULT NULL::text) RETURNS void
     LANGUAGE plpgsql
@@ -117,9 +115,6 @@ $$;
 
 ALTER FUNCTION public.log_activity(p_user_id integer, p_action text, p_details text) OWNER TO postgres;
 
---
--- Name: log_price_change(); Type: FUNCTION; Schema: public; Owner: postgres
---
 
 CREATE FUNCTION public.log_price_change() RETURNS trigger
     LANGUAGE plpgsql
@@ -131,6 +126,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
+
 $$;
 
 

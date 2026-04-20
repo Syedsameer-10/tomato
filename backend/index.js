@@ -176,17 +176,48 @@ app.get("/api/search", async (req, res) => {
 });
 
 // ============================================================
+// 🚚 DELIVERY FEE — uses calculate_delivery_fee DB function
+// GET /api/delivery-fee?subtotal=500
+// ============================================================
+
+app.get("/api/delivery-fee", async (req, res) => {
+  try {
+    const subtotal = parseFloat(req.query.subtotal) || 0;
+    const { data, error } = await supabase.rpc("calculate_delivery_fee", { subtotal });
+    if (error) {
+      console.error("❌ delivery fee RPC error:", error);
+      // fallback: same logic as the DB function
+      return res.json({ success: true, delivery_fee: subtotal >= 500 ? 0 : 30 });
+    }
+    res.json({ success: true, delivery_fee: data });
+  } catch (err) {
+    console.error("❌ Error in delivery fee:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ============================================================
 // 🧩 PLACE ORDER
+// Triggers that fire automatically after insert:
+//   trg_log_order          → logs ORDER_PLACED to activity_log
+//   trg_create_order_history → snapshots order to order_history
 // ============================================================
 
 app.post("/api/placeorder", async (req, res) => {
   try {
-    const { user_id, total_amount, delivery_address, cartItems } = req.body;
+    const { user_id, subtotal, discount = 0, delivery_address, cartItems } = req.body;
     console.log("📦 Received Order:", req.body);
 
     if (!user_id || !delivery_address || !cartItems || cartItems.length === 0) {
       return res.status(400).json({ success: false, message: "Invalid order data" });
     }
+
+    // Use calculate_delivery_fee DB function (free delivery if subtotal >= 500)
+    const { data: feeData, error: feeError } = await supabase.rpc("calculate_delivery_fee", {
+      subtotal: subtotal || 0,
+    });
+    const delivery_fee = feeError ? (subtotal >= 500 ? 0 : 30) : feeData;
+    const total_amount = (subtotal || 0) + delivery_fee - (discount || 0);
 
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
@@ -223,7 +254,7 @@ app.post("/api/placeorder", async (req, res) => {
       return res.status(500).json({ success: false, message: "Database error" });
     }
 
-    res.json({ success: true, message: "Order placed successfully", orderId });
+    res.json({ success: true, message: "Order placed successfully", orderId, delivery_fee, total_amount });
   } catch (err) {
     console.error("❌ Error placing order:", err);
     res.status(500).json({ success: false, message: "Server error" });

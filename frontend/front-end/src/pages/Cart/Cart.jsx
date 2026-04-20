@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import './Cart.css';
 import { StoreContext } from '../../Context/storecontext';
 import { useNavigate } from 'react-router-dom';
@@ -10,11 +10,21 @@ const Cart = ({ setShowLogin }) => {
   } = useContext(StoreContext);
   const navigate = useNavigate();
   const [couponInput, setCouponInput] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState(30);
 
   const itemsInCart = menuItems.filter(item => cartItems[item.item_id] > 0);
   const subtotal = getTotalCartAmount();
-  const deliveryFee = subtotal > 0 ? 30 : 0;
   const discount = getDiscount();
+
+  // Fetch delivery fee from DB function whenever subtotal changes
+  useEffect(() => {
+    if (subtotal === 0) { setDeliveryFee(0); return; }
+    fetch(`/api/delivery-fee?subtotal=${subtotal}`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setDeliveryFee(d.delivery_fee); })
+      .catch(() => setDeliveryFee(subtotal >= 500 ? 0 : 30));
+  }, [subtotal]);
+
   const total = subtotal + deliveryFee - discount;
 
   const handleCheckout = () => {
@@ -66,11 +76,15 @@ const Cart = ({ setShowLogin }) => {
             <p>Subtotal</p><p>₹{subtotal}</p>
           </div>
           <div className='cart-total-details'>
-            <p>Delivery Fee</p><p>₹{deliveryFee}</p>
+            <p>Delivery Fee</p>
+            <p>{deliveryFee === 0 && subtotal > 0 ? <span style={{color:'#2e7d32'}}>FREE 🎉</span> : `₹${deliveryFee}`}</p>
           </div>
+          {subtotal >= 500 && subtotal > 0 && (
+            <p className='coupon-success'>🎉 Free delivery on orders above ₹500!</p>
+          )}
           {discount > 0 && (
             <div className='cart-total-details coupon-discount'>
-              <p>Coupon Discount ({appliedCoupon.label})</p>
+              <p>Coupon ({appliedCoupon.label})</p>
               <p>− ₹{discount}</p>
             </div>
           )}
