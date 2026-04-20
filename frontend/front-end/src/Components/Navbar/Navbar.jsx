@@ -1,12 +1,13 @@
 import React, { useState, useContext } from "react";
 import "./Navbar.css";
 import { assets } from "../../assets/assets";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { StoreContext } from "../../Context/storecontext";
 
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
   const { getTotalCartAmount, user, setUser } = useContext(StoreContext);
+  const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -14,6 +15,13 @@ const Navbar = ({ setShowLogin }) => {
 
   const handleLogout = () => {
     setUser(null);
+  };
+
+  const handleResultClick = (item) => {
+    setShowResults(false);
+    setSearchTerm("");
+    setSearchResults([]);
+    navigate(`/?q=${encodeURIComponent(item.item_name)}`);
   };
 
   // 🔍 Handle Search Input
@@ -91,7 +99,7 @@ const Navbar = ({ setShowLogin }) => {
           {showResults && searchResults.length > 0 && (
             <div className="search-results">
               {searchResults.map((item, index) => (
-                <div key={index} className="search-item">
+                <div key={index} className="search-item" onMouseDown={() => handleResultClick(item)}>
                   <img src={item.image} alt={item.item_name} />
                   <div>
                     <p className="item-name">{item.item_name}</p>

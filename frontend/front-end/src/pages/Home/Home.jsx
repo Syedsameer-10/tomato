@@ -1,20 +1,28 @@
 import React, { useState, useEffect, useContext } from "react";
 import "./Home.css";
 import { StoreContext } from "../../Context/storecontext";
+import { useSearchParams } from "react-router-dom";
 import Header from "../../Components/Header/Header";
 import Exploremenu from "../../Components/Exploremenu/Exploremenu";
 import RestaurantDisplay from "../../Components/RestaurantDisplay/RestaurantDisplay";
 import AppDownload from "../../Components/AppDownload/AppDownload";
 
 const Home = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [category, setCategory] = useState("All");
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
   const [searchResults, setSearchResults] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [vegFilter, setVegFilter] = useState("All");
   const [filteredItems, setFilteredItems] = useState([]);
   const { addToCart, removeFromCart, cartItems } = useContext(StoreContext);
+
+  // Sync URL ?q param → searchTerm when navigating from navbar
+  useEffect(() => {
+    const q = searchParams.get("q") || "";
+    if (q !== searchTerm) setSearchTerm(q);
+  }, [searchParams]);
 
   // 🔍 Search functionality
   useEffect(() => {
