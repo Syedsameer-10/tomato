@@ -188,3 +188,48 @@
   color: #888;
   margin: 0;
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 10px 16px;
+  }
+
+  .navbar .logo {
+    width: 90px;
+  }
+
+  .navbar-menu {
+    display: none;
+  }
+
+  .navbar-search input {
+    width: 110px;
+    font-size: 13px;
+  }
+
+  .search-results {
+    width: min(90vw, 320px);
+    right: -40px;
+  }
+
+  .navbar-right {
+    gap: 12px;
+  }
+
+  .navbar-user span {
+    display: none;
+  }
+
+  .navbar button,
+  .logout-btn {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-search {
+    display: none;
+  }
+}

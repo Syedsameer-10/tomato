@@ -99,3 +99,39 @@
   height: 16px;
   margin-right: 5px;
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .restaurant-food-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .restaurant-name {
+    font-size: 18px;
+  }
+
+  .restaurant-img {
+    width: 70px;
+    height: 70px;
+  }
+
+  .restaurant-card {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .restaurant-food-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .food-img {
+    height: 90px;
+  }
+
+  .food-name {
+    font-size: 13px;
+  }
+}

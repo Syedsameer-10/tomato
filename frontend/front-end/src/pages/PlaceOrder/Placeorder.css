@@ -35,3 +35,28 @@
 .place-order .cart-total button{
     margin-top: 30px;
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .place-order {
+    flex-direction: column;
+    margin-top: 30px;
+    gap: 30px;
+    padding: 0 16px;
+  }
+
+  .place-order-left,
+  .place-order-right {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .place-order-left .title {
+    font-size: 22px;
+    margin-bottom: 24px;
+  }
+
+  .place-order .cart-total button {
+    width: 100%;
+  }
+}

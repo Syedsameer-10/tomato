@@ -20,3 +20,15 @@
 .app-download-platforms img:hover{
     transform: scale(1.05);
 }
+
+@media (max-width: 768px) {
+  .app-download {
+    margin-top: 50px;
+    font-size: 18px;
+    padding: 0 16px;
+  }
+
+  .app-download-platforms {
+    margin-top: 24px;
+  }
+}
