@@ -7,6 +7,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.json({ success: true, service: "tomato-backend" });
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({ success: true, service: "tomato-backend" });
+});
+
 // ============================================================
 // 🧩 RESTAURANTS
 // ============================================================
@@ -332,5 +340,10 @@ app.post("/api/login", async (req, res) => {
 // START SERVER
 // ============================================================
 
-const PORT = process.env.BACKEND_PORT || 3001;
-app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 3001;
+
+if (!process.env.VERCEL) {
+  app.listen(PORT, "0.0.0.0", () => console.log(`Server running at http://localhost:${PORT}`));
+}
+
+export default app;

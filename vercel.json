@@ -1,0 +1,10 @@
+{
+  "framework": null,
+  "installCommand": "npm install",
+  "buildCommand": "echo backend-only",
+  "functions": {
+    "api/[...path].js": {
+      "maxDuration": 10
+    }
+  }
+}
