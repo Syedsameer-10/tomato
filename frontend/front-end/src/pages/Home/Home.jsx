@@ -6,6 +6,7 @@ import Header from "../../Components/Header/Header";
 import Exploremenu from "../../Components/Exploremenu/Exploremenu";
 import RestaurantDisplay from "../../Components/RestaurantDisplay/RestaurantDisplay";
 import AppDownload from "../../Components/AppDownload/AppDownload";
+import { apiUrl } from "../../lib/api";
 
 const Home = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,7 +34,7 @@ const Home = () => {
       }
       try {
         const response = await fetch(
-          `/api/search?q=${encodeURIComponent(searchTerm)}`
+          apiUrl(`/api/search?q=${encodeURIComponent(searchTerm)}`)
         );
         const data = await response.json();
         setSearchResults(data);
@@ -58,9 +59,9 @@ const Home = () => {
       }
 
       try {
-        const url = `/api/filter?filter=${encodeURIComponent(
+        const url = apiUrl(`/api/filter?filter=${encodeURIComponent(
           activeFilter
-        )}&veg=${encodeURIComponent(vegFilter)}`;
+        )}&veg=${encodeURIComponent(vegFilter)}`);
         const res = await fetch(url);
         const data = await res.json();
         if (data.success) setFilteredItems(data.items);

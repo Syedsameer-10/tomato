@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import "./LoginPopup.css";
 import { assets } from "../../assets/assets";
 import { StoreContext } from "../../Context/storecontext";
+import { apiUrl } from "../../lib/api";
 
 const LoginPopup = ({ setShowLogin }) => {
   const { setUser } = useContext(StoreContext);
@@ -25,7 +26,7 @@ const LoginPopup = ({ setShowLogin }) => {
     const endpoint = currState === "Sign Up" ? "/api/signup" : "/api/login";
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch(apiUrl(endpoint), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

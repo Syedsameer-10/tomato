@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../Context/storecontext";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../../lib/api";
 
 const Placeorder = () => {
   const { cartItems, menuItems, getTotalCartAmount, getDiscount, appliedCoupon, clearCart, user } = useContext(StoreContext);
@@ -19,7 +20,7 @@ const Placeorder = () => {
   // Fetch delivery fee from DB function whenever subtotal changes
   useEffect(() => {
     if (subtotal === 0) { setDeliveryFee(0); return; }
-    fetch(`/api/delivery-fee?subtotal=${subtotal}`)
+    fetch(apiUrl(`/api/delivery-fee?subtotal=${subtotal}`))
       .then(r => r.json())
       .then(d => { if (d.success) setDeliveryFee(d.delivery_fee); })
       .catch(() => setDeliveryFee(subtotal >= 500 ? 0 : 30));
@@ -64,7 +65,7 @@ const Placeorder = () => {
     };
 
     try {
-      const res = await fetch("/api/placeorder", {
+      const res = await fetch(apiUrl("/api/placeorder"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData)

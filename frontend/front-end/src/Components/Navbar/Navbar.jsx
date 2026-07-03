@@ -3,6 +3,7 @@ import "./Navbar.css";
 import { assets } from "../../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
 import { StoreContext } from "../../Context/storecontext";
+import { apiUrl } from "../../lib/api";
 
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
@@ -36,7 +37,7 @@ const Navbar = ({ setShowLogin }) => {
     }
 
     try {
-      const response = await fetch(`/api/search?q=${value}`);
+      const response = await fetch(apiUrl(`/api/search?q=${encodeURIComponent(value)}`));
       const data = await response.json();
       setSearchResults(data);
       setShowResults(true);

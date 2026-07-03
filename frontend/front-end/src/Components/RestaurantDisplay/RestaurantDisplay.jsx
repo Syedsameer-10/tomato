@@ -3,6 +3,7 @@ import "./RestaurantDisplay.css";
 import Fooditem from "../Fooditem/Fooditem";
 
 import { StoreContext } from "../../Context/storecontext";
+import { apiUrl } from "../../lib/api";
 
 const RestaurantDisplay = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -10,7 +11,7 @@ const RestaurantDisplay = () => {
   const { setMenuItems } = useContext(StoreContext);
 
   useEffect(() => {
-    fetch("/api/restaurants")
+    fetch(apiUrl("/api/restaurants"))
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setRestaurants(data.restaurants);
@@ -21,7 +22,7 @@ const RestaurantDisplay = () => {
   useEffect(() => {
     let allItems = [];
     restaurants.forEach((rest) => {
-      fetch(`/api/menu/${rest.restaurant_id}`)
+      fetch(apiUrl(`/api/menu/${rest.restaurant_id}`))
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
