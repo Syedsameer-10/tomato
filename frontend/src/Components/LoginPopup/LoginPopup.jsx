@@ -1,11 +1,11 @@
 import React, { useState, useContext } from "react";
 import "./LoginPopup.css";
 import { assets } from "../../assets/assets";
-import { StoreContext } from "../../Context/storecontext";
+import { StoreContext } from "../../Context/store-context";
 import { apiUrl } from "../../lib/api";
 
 const LoginPopup = ({ setShowLogin }) => {
-  const { setUser } = useContext(StoreContext);
+  const { loginUser } = useContext(StoreContext);
   const [currState, setCurrState] = useState("Sign Up");
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ const LoginPopup = ({ setShowLogin }) => {
 
       if (data.success) {
         alert(`✅ ${currState} successful!`);
-        setUser(data.customer); // Store logged-in user in context
+        loginUser(data.customer, data.token);
         setShowLogin(false);
       } else {
         alert(`❌ ${data.message}`);

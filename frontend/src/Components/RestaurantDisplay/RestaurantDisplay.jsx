@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import "./RestaurantDisplay.css";
 import Fooditem from "../Fooditem/Fooditem";
 
-import { StoreContext } from "../../Context/storecontext";
+import { StoreContext } from "../../Context/store-context";
 import { apiUrl } from "../../lib/api";
 
 const RestaurantDisplay = () => {

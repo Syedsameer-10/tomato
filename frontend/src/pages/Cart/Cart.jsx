@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import './Cart.css';
-import { StoreContext } from '../../Context/storecontext';
+import { StoreContext } from '../../Context/store-context';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl } from '../../lib/api';
 
@@ -28,10 +28,21 @@ const Cart = ({ setShowLogin }) => {
 
   const total = subtotal + deliveryFee - discount;
 
+  useEffect(() => {
+    if (user?.role === "admin") {
+      navigate("/admin", { replace: true });
+    }
+  }, [navigate, user]);
+
   const handleCheckout = () => {
+    if (user?.role === "admin") {
+      navigate("/admin", { replace: true });
+      return;
+    }
+
     if (!user) {
       alert("❌ Please log in first to place an order!");
-      setShowLogin(true);
+      setShowLogin?.(true);
       return;
     }
     navigate('/order');

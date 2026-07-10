@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import "./Home.css";
-import { StoreContext } from "../../Context/storecontext";
+import { StoreContext } from "../../Context/store-context";
 import { useSearchParams } from "react-router-dom";
 import Header from "../../Components/Header/Header";
 import Exploremenu from "../../Components/Exploremenu/Exploremenu";
@@ -9,21 +9,22 @@ import AppDownload from "../../Components/AppDownload/AppDownload";
 import { apiUrl } from "../../lib/api";
 
 const Home = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [category, setCategory] = useState("All");
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [, setSelectedRestaurant] = useState(null);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
   const [searchResults, setSearchResults] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [vegFilter, setVegFilter] = useState("All");
   const [filteredItems, setFilteredItems] = useState([]);
-  const { addToCart, removeFromCart, cartItems } = useContext(StoreContext);
+  const { addToCart, removeFromCart, cartItems, user } = useContext(StoreContext);
+  const isAdmin = user?.role === "admin";
 
   // Sync URL ?q param → searchTerm when navigating from navbar
   useEffect(() => {
     const q = searchParams.get("q") || "";
     if (q !== searchTerm) setSearchTerm(q);
-  }, [searchParams]);
+  }, [searchParams, searchTerm]);
 
   // 🔍 Search functionality
   useEffect(() => {
@@ -89,7 +90,7 @@ const Home = () => {
           <p className="food-desc">{item.description}</p>
           <div className="food-bottom">
             <span className="food-price">₹{item.price}</span>
-            {quantity > 0 ? (
+            {!isAdmin && (quantity > 0 ? (
               <div className="quantity-controls">
                 <button
                   className="decrement-btn"
@@ -104,7 +105,7 @@ const Home = () => {
               </div>
             ) : (
               <button onClick={() => addToCart(item)}>Add to Cart</button>
-            )}
+            ))}
           </div>
         </div>
       </div>

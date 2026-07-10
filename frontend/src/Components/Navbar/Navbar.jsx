@@ -2,12 +2,12 @@ import React, { useState, useContext } from "react";
 import "./Navbar.css";
 import { assets } from "../../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
-import { StoreContext } from "../../Context/storecontext";
+import { StoreContext } from "../../Context/store-context";
 import { apiUrl } from "../../lib/api";
 
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
-  const { getTotalCartAmount, user, setUser } = useContext(StoreContext);
+  const { getTotalCartAmount, user, logoutUser } = useContext(StoreContext);
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,7 +15,7 @@ const Navbar = ({ setShowLogin }) => {
   const [showResults, setShowResults] = useState(false);
 
   const handleLogout = () => {
-    setUser(null);
+    logoutUser();
   };
 
   const handleResultClick = (item) => {
@@ -115,16 +115,28 @@ const Navbar = ({ setShowLogin }) => {
         </div>
 
         {/* 🛒 Cart */}
-        <Link to="/cart">
-          <div className="navbar-cart-icon">
-            <img src={assets.basket_icon} alt="Basket" />
-            {getTotalCartAmount() !== 0 && <div className="dot"></div>}
-          </div>
-        </Link>
+        {user?.role !== "admin" && (
+          <Link to="/cart">
+            <div className="navbar-cart-icon">
+              <img src={assets.basket_icon} alt="Basket" />
+              {getTotalCartAmount() !== 0 && <div className="dot"></div>}
+            </div>
+          </Link>
+        )}
 
         {/* 👤 User */}
         {user ? (
           <div className="navbar-user">
+            {user.role === "admin" && (
+              <Link className="orders-link" to="/admin">
+                Admin
+              </Link>
+            )}
+            {user.role !== "admin" && (
+              <Link className="orders-link" to="/my-orders">
+                My Orders
+              </Link>
+            )}
             <span>Hi, {user.name}</span>
             <button className="logout-btn" onClick={handleLogout}>
               Logout

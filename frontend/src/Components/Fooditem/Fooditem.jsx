@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
 import './Fooditem.css';
 import { assets } from '../../assets/assets';
-import { StoreContext } from '../../Context/storecontext';
+import { StoreContext } from '../../Context/store-context';
 
 const FoodItem = ({ id, name, price, description, image, restaurantId }) => {
-  const { cartItems, addToCart, removeFromCart } = useContext(StoreContext);
+  const { cartItems, addToCart, removeFromCart, user } = useContext(StoreContext);
+  const isAdmin = user?.role === "admin";
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -29,7 +30,7 @@ const FoodItem = ({ id, name, price, description, image, restaurantId }) => {
     <div className="food-item">
       <div className="food-item-img-container">
         <img className="food-item-image" src={image} alt={name} />
-        {!cartItems[id] ? (
+        {!isAdmin && (!cartItems[id] ? (
           <button type="button" className="add-button" onClick={handleAdd}>
             <img src={assets.add_icon_white} alt="Add" />
           </button>
@@ -43,7 +44,7 @@ const FoodItem = ({ id, name, price, description, image, restaurantId }) => {
               <img src={assets.add_icon_green} alt="Add" />
             </button>
           </div>
-        )}
+        ))}
       </div>
 
       <div className="food-item-info">

@@ -75,6 +75,18 @@
   color: #333;
 }
 
+.orders-link {
+  color: #2d9cdb;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.orders-link:hover {
+  color: #2381b8;
+}
+
 .logout-btn {
   padding: 5px 10px;
   border: none;

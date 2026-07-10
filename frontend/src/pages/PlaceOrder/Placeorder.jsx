@@ -1,11 +1,11 @@
 import React, { useContext, useState, useEffect } from "react";
 import "./Placeorder.css";
-import { StoreContext } from "../../Context/storecontext";
+import { StoreContext } from "../../Context/store-context";
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from "../../lib/api";
 
 const Placeorder = () => {
-  const { cartItems, menuItems, getTotalCartAmount, getDiscount, appliedCoupon, clearCart, user } = useContext(StoreContext);
+  const { cartItems, menuItems, getTotalCartAmount, getDiscount, appliedCoupon, clearCart, user, authToken } = useContext(StoreContext);
   const navigate = useNavigate();
   const [deliveryFee, setDeliveryFee] = useState(30);
 
@@ -28,15 +28,27 @@ const Placeorder = () => {
 
   const total = subtotal + deliveryFee - discount;
 
+  useEffect(() => {
+    if (user?.role === "admin") {
+      navigate("/admin", { replace: true });
+    }
+  }, [navigate, user]);
+
   const handleChange = e =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handlePlaceOrder = async e => {
     e.preventDefault();
 
-    if (!user) {
+    if (!user || !authToken) {
       alert("❌ You must log in to place an order!");
       navigate("/login");
+      return;
+    }
+
+    if (user.role === "admin") {
+      alert("Admin accounts cannot place customer orders.");
+      navigate("/admin", { replace: true });
       return;
     }
 
@@ -57,7 +69,6 @@ const Placeorder = () => {
 
     // Send subtotal + discount; backend calls calculate_delivery_fee DB function
     const orderData = {
-      user_id: user.customer_id,
       subtotal,
       discount,
       delivery_address: deliveryAddress,
@@ -67,7 +78,10 @@ const Placeorder = () => {
     try {
       const res = await fetch(apiUrl("/api/placeorder"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
         body: JSON.stringify(orderData)
       });
 

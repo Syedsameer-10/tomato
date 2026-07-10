@@ -1,6 +1,8 @@
-import { createContext, useState } from "react";
-
-export const StoreContext = createContext(null);
+import { useEffect, useState } from "react";
+import { StoreContext } from "./store-context";
+import { clearAuthSession, loadAuthSession, saveAuthSession } from "../lib/authStorage";
+import { clearCartState, loadCartState, saveCartState } from "../lib/cartStorage";
+import { apiUrl } from "../lib/api";
 
 const COUPONS = {
   TOMATO10: { type: "percent", value: 10, label: "10% off" },
@@ -9,14 +11,31 @@ const COUPONS = {
 };
 
 const StoreContextProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState({});
-  const [menuItems, setMenuItems] = useState([]);
-  const [activeRestaurant, setActiveRestaurant] = useState(null);
+  const [savedCartState] = useState(loadCartState);
+  const [savedAuthSession] = useState(loadAuthSession);
+  const [cartItems, setCartItems] = useState(savedCartState.cartItems);
+  const [menuItems, setMenuItems] = useState(savedCartState.menuItems);
+  const [activeRestaurant, setActiveRestaurant] = useState(savedCartState.activeRestaurant);
   const [user, setUser] = useState(null);
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [authToken, setAuthToken] = useState(savedAuthSession.token);
+  const [appliedCoupon, setAppliedCoupon] = useState(savedCartState.appliedCoupon);
   const [couponError, setCouponError] = useState("");
 
+  useEffect(() => {
+    saveCartState({
+      cartItems,
+      menuItems,
+      activeRestaurant,
+      appliedCoupon,
+    });
+  }, [cartItems, menuItems, activeRestaurant, appliedCoupon]);
+
   const addToCart = (item) => {
+    if (user?.role === "admin") {
+      alert("Admin accounts cannot place customer orders.");
+      return;
+    }
+
     const { item_id, restaurant_id } = item;
     if (activeRestaurant && activeRestaurant !== restaurant_id) {
       alert("❌ You can only order from one restaurant at a time. Clear your cart to switch.");
@@ -50,7 +69,57 @@ const StoreContextProvider = ({ children }) => {
     setActiveRestaurant(null);
     setAppliedCoupon(null);
     setCouponError("");
+    clearCartState();
   };
+
+  const loginUser = (customer, token) => {
+    if (customer?.role === "admin") {
+      clearCart();
+    }
+
+    setUser(customer);
+    setAuthToken(token);
+    saveAuthSession(customer, token);
+  };
+
+  const logoutUser = () => {
+    setUser(null);
+    setAuthToken(null);
+    clearAuthSession();
+  };
+
+  useEffect(() => {
+    if (!authToken) return;
+
+    let isActive = true;
+
+    const verifySavedSession = async () => {
+      try {
+        const response = await fetch(apiUrl("/api/auth/me"), {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        const data = await response.json();
+
+        if (!isActive) return;
+
+        if (data.success) {
+          setUser(data.customer);
+          saveAuthSession(data.customer, authToken);
+          if (data.customer?.role === "admin") clearCart();
+        } else {
+          logoutUser();
+        }
+      } catch {
+        if (isActive) logoutUser();
+      }
+    };
+
+    verifySavedSession();
+
+    return () => {
+      isActive = false;
+    };
+  }, [authToken]);
 
   const getTotalCartAmount = () => {
     let total = 0;
@@ -106,7 +175,9 @@ const StoreContextProvider = ({ children }) => {
       setMenuItems,
       activeRestaurant,
       user,
-      setUser,
+      authToken,
+      loginUser,
+      logoutUser,
     }}>
       {children}
     </StoreContext.Provider>
