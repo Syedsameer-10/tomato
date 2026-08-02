@@ -20,6 +20,19 @@ const Home = () => {
   const { addToCart, removeFromCart, cartItems, user } = useContext(StoreContext);
   const isAdmin = user?.role === "admin";
 
+  const handleViewMenu = () => {
+    setSearchTerm("");
+    setActiveFilter("All");
+    setVegFilter("All");
+    setFilteredItems([]);
+    window.requestAnimationFrame(() => {
+      document.getElementById("restaurant-display")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
+
   // Sync URL ?q param → searchTerm when navigating from navbar
   useEffect(() => {
     const q = searchParams.get("q") || "";
@@ -114,7 +127,11 @@ const Home = () => {
 
   return (
     <div className="home-page">
-      <Header onFilterSelect={setActiveFilter} onVegToggle={setVegFilter} />
+      <Header
+        onFilterSelect={setActiveFilter}
+        onVegToggle={setVegFilter}
+        onViewMenu={handleViewMenu}
+      />
 
       {/* 🔍 Search bar */}
       <div className="home-search-container">

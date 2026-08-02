@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./Header.css";
 import Carousel from "../Carousel/Carousel";
 
-const Header = ({ onFilterSelect, onVegToggle }) => {
+const Header = ({ onFilterSelect, onVegToggle, onViewMenu }) => {
   const [isVeg, setIsVeg] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
 
@@ -59,7 +59,7 @@ const Header = ({ onFilterSelect, onVegToggle }) => {
         <div className="header-contents">
           <h2>Order your favourite food here</h2>
           <p>Choose from a diverse menu featuring delicious dishes</p>
-          <button>View Menu</button>
+          <button type="button" onClick={onViewMenu}>View Menu</button>
         </div>
       </div>
     </div>

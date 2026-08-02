@@ -39,7 +39,7 @@ const RestaurantDisplay = () => {
   }, [restaurants, setMenuItems]);
 
   return (
-    <div className="restaurant-grid">
+    <div className="restaurant-grid" id="restaurant-display">
       {restaurants.map((res) => (
         <div className="restaurant-card" key={res.restaurant_id}>
           <div className="restaurant-header">
