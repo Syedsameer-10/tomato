@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import "./LoginPopup.css";
 import { assets } from "../../assets/assets";
 import { StoreContext } from "../../Context/store-context";
-import { apiUrl } from "../../lib/api";
+import { apiUrl, readApiJson } from "../../lib/api";
 
 const LoginPopup = ({ setShowLogin }) => {
   const { loginUser } = useContext(StoreContext);
@@ -10,43 +10,44 @@ const LoginPopup = ({ setShowLogin }) => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (event) =>
+    setFormData({ ...formData, [event.target.name]: event.target.value });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     const { name, email, password } = formData;
-    if (currState === "Sign Up" && !name)
-      return alert("❌ Please enter your name");
-    if (!email || !password)
-      return alert("❌ Please enter email & password");
+    if (currState === "Sign Up" && !name) {
+      return alert("Please enter your name");
+    }
+    if (!email || !password) {
+      return alert("Please enter email & password");
+    }
 
     setLoading(true);
     const endpoint = currState === "Sign Up" ? "/api/signup" : "/api/login";
 
     try {
-      const res = await fetch(apiUrl(endpoint), {
+      const response = await fetch(apiUrl(endpoint), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-      setLoading(false);
-      console.log("🔹 Response:", data);
+      const data = await readApiJson(response);
 
       if (data.success) {
-        alert(`✅ ${currState} successful!`);
+        alert(`${currState} successful!`);
         loginUser(data.customer, data.token);
         setShowLogin(false);
       } else {
-        alert(`❌ ${data.message}`);
+        alert(data.message || `${currState} failed`);
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Auth request error:", error);
+      alert(error.message || "Server error");
+    } finally {
       setLoading(false);
-      console.error("Error:", err);
-      alert("❌ Server error");
     }
   };
 
